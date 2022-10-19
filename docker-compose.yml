@@ -7,26 +7,23 @@ networks:
        config:
          # Subnet Festlegen
          - subnet: ${SUBNET}.0/24
-   mariadb_mysqlNet:
-     external: true
 
 services:
   ocs-server:
-    #image: ocsinventory/ocsinventory-docker-image:latest
-    image: johann8/ocsinventory:latest
+    # image: ocsinventory/ocsinventory-docker-image:latest
+    # image: johann8/ocsinventory:latest
+    image: johann8/ubuntu-ocs:${VERSION_OCS}
     container_name : ocsinventory-server
     restart: always
-    ports:
-      - ${PORT}:80
-      #- 127.0.0.1:1081:80
-      #- 127.0.0.1:2443:443
+    #ports:
+      #- ${PORT0}:80
     volumes:
       - "${DOCKERDIR}/data/perlcomdata:/etc/ocsinventory-server"
       - "${DOCKERDIR}/data/ocsreportsdata:/usr/share/ocsinventory-reports/ocsreports/extensions"
       - "${DOCKERDIR}/data/varlibdata:/var/lib/ocsinventory-reports"
-      - "${DOCKERDIR}/data/httpdconfdata:/etc/httpd/conf.d"
-      #- "${DOCKERDIR}/data/conf/php/php.ini:/etc/opt/remi/php73/php.ini"
-      - "${DOCKERDIR}/data/conf/php/php.ini:/etc/php.ini"
+      # comment out after installation
+      #- "${DOCKERDIR}/data/httpdconfdata:/etc/apache2/conf-available"
+      #- "${DOCKERDIR}/data/docker-entrypoint.d/20-web-console.sh:/docker-entrypoint.d/20-web-console.sh"
     environment:
       TZ: ${TZ}
       OCS_DB_SERVER: ${OCS_DB_SERVER}
@@ -43,4 +40,29 @@ services:
         #ipv4_address: 172.26.5.2
         aliases:
           - ocs-server
-      mariadb_mysqlNet:
+
+  mariadb-ocs:
+    image: mariadb:${VERSION_DB}
+    container_name: mariadbOCS
+    stop_grace_period: 45s
+    restart: unless-stopped
+    healthcheck:
+      test: "mysqladmin ping -h localhost -u$${MARIADB_USER} --password=$${MARIADB_PASSWORD}"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+    volumes:
+      - "${DOCKERDIR}/data/mariadb/data:/var/lib/mysql:rw"
+      #- "${DOCKERDIR}/data/mariadb/socket:/var/run/mysqld"
+      - "${DOCKERDIR}/data/config/mariadb:/etc/mysql/conf.d:ro"
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:53306:3306"
+    networks:
+      ocsNet:
+
