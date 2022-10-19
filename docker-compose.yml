@@ -1,0 +1,46 @@
+version: '3'
+
+networks:
+   ocsNet:
+     ipam:
+       driver: default
+       config:
+         # Subnet Festlegen
+         - subnet: ${SUBNET}.0/24
+   mariadb_mysqlNet:
+     external: true
+
+services:
+  ocs-server:
+    #image: ocsinventory/ocsinventory-docker-image:latest
+    image: johann8/ocsinventory:latest
+    container_name : ocsinventory-server
+    restart: always
+    ports:
+      - ${PORT}:80
+      #- 127.0.0.1:1081:80
+      #- 127.0.0.1:2443:443
+    volumes:
+      - "${DOCKERDIR}/data/perlcomdata:/etc/ocsinventory-server"
+      - "${DOCKERDIR}/data/ocsreportsdata:/usr/share/ocsinventory-reports/ocsreports/extensions"
+      - "${DOCKERDIR}/data/varlibdata:/var/lib/ocsinventory-reports"
+      - "${DOCKERDIR}/data/httpdconfdata:/etc/httpd/conf.d"
+      #- "${DOCKERDIR}/data/conf/php/php.ini:/etc/opt/remi/php73/php.ini"
+      - "${DOCKERDIR}/data/conf/php/php.ini:/etc/php.ini"
+    environment:
+      TZ: ${TZ}
+      OCS_DB_SERVER: ${OCS_DB_SERVER}
+      OCS_DB_USER: ${OCS_DB_USER}
+      OCS_DB_PASS: ${OCS_DB_PASS}
+      OCS_DB_NAME: ${OCS_DB_NAME}
+      # See documentation to set up SSL for MySQL
+      OCS_SSL_ENABLED: 0
+    #links:
+      #- mysqldb
+    networks:
+      ocsNet:
+        # Feste IP setzen
+        #ipv4_address: 172.26.5.2
+        aliases:
+          - ocs-server
+      mariadb_mysqlNet:
