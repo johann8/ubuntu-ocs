@@ -1,8 +1,9 @@
-ARG BASE_IMAGE=ubuntu:22.04
+ARG BASE_IMAGE=ubuntu:22.10
+# ARG BASE_IMAGE=ubuntu:22.04
 
 FROM ${BASE_IMAGE}
 
-ENV OCS_VERSION 2.11.0
+ENV OCS_VERSION 2.11.1
 
 LABEL Maintainer="Johann H. <email>" \
       Version="${OCS_VERSION}" \
