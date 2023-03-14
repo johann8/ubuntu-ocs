@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set variables
-_VERSION=0.3
+_VERSION=0.4
 _TAG=ubuntu-ocs
 
 # build image glpi
@@ -13,11 +13,13 @@ if ! [ ${_BUILD} = 0 ]; then
 else
    echo "Docker Image build successful"
    docker images -a
+   docker tag johann8/${_TAG}:${_VERSION} johann8/${_TAG}:latest
 fi
 
 #push image to dockerhub
 if [ ${_BUILD} = 0 ]; then
    echo "Pushing docker images to dockerhub..."
+   docker push johann8/${_TAG}:latest
    docker push johann8/${_TAG}:${_VERSION}
    _PUSH=$?
    docker images -a |grep ocs
@@ -35,7 +37,11 @@ fi
 #delete build
 if [ ${_PUSH} = 0 ]; then
    echo "Deleting docker images..."
+   docker rmi johann8/${_TAG}:latest
    docker rmi johann8/${_TAG}:${_VERSION}
    #docker rmi $(docker images -f "dangling=true" -q)
    docker images -a
 fi
+
+# Delete none images
+# docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
