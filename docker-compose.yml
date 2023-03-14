@@ -5,25 +5,20 @@ networks:
      ipam:
        driver: default
        config:
-         # Subnet Festlegen
          - subnet: ${SUBNET}.0/24
 
 services:
   ocs-server:
-    # image: ocsinventory/ocsinventory-docker-image:latest
-    # image: johann8/ocsinventory:latest
     image: johann8/ubuntu-ocs:${VERSION_OCS}
     container_name : ocsinventory-server
     restart: always
-    #ports:
-      #- ${PORT0}:80
+    #ports:                               # comment out if traefik is used
+      #- ${PORT0}:80                      # comment out if traefik is used
     volumes:
       - "${DOCKERDIR}/data/perlcomdata:/etc/ocsinventory-server"
       - "${DOCKERDIR}/data/ocsreportsdata:/usr/share/ocsinventory-reports/ocsreports/extensions"
       - "${DOCKERDIR}/data/varlibdata:/var/lib/ocsinventory-reports"
-      # comment out after installation
-      #- "${DOCKERDIR}/data/httpdconfdata:/etc/apache2/conf-available"
-      #- "${DOCKERDIR}/data/docker-entrypoint.d/20-web-console.sh:/docker-entrypoint.d/20-web-console.sh"
+      - "${DOCKERDIR}/data/httpdconfdata:/etc/apache2/conf-available"
     environment:
       TZ: ${TZ}
       OCS_DB_SERVER: ${OCS_DB_SERVER}
@@ -32,30 +27,32 @@ services:
       OCS_DB_NAME: ${OCS_DB_NAME}
       # See documentation to set up SSL for MySQL
       OCS_SSL_ENABLED: 0
-    #links:
-      #- mysqldb
+    links:
+      - ocsdb
+    depends_on:
+      - ocsdb 
     networks:
       ocsNet:
-        # Feste IP setzen
-        #ipv4_address: 172.26.5.2
+        #ipv4_address: ${SUBNET}.2
         aliases:
           - ocs-server
 
-  mariadb-ocs:
+  ocsdb:
     image: mariadb:${VERSION_DB}
     container_name: mariadbOCS
     stop_grace_period: 45s
     restart: unless-stopped
     healthcheck:
       test: "mysqladmin ping -h localhost -u$${MARIADB_USER} --password=$${MARIADB_PASSWORD}"
-      interval: 30s
+      interval: 45s
       timeout: 10s
       retries: 5
     restart: always
     volumes:
       - "${DOCKERDIR}/data/mariadb/data:/var/lib/mysql:rw"
+      - "${DOCKERDIR}/data/mariadb/config:/etc/mysql/conf.d:ro"
+      #- "${DOCKERDIR}/data/mariadb/sql:/docker-entrypoint-initdb.d"   # comment out if this is a first installation
       #- "${DOCKERDIR}/data/mariadb/socket:/var/run/mysqld"
-      - "${DOCKERDIR}/data/config/mariadb:/etc/mysql/conf.d:ro"
     environment:
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
