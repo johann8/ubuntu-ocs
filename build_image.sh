@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set variables
-_VERSION=0.5
+_VERSION=2.12.0
 _TAG=ubuntu-ocs
 
 # build image glpi
