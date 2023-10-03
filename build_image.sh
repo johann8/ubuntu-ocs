@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # set variables
-_VERSION=2.12.0
+_VERSION=2.12.1
 _TAG=ubuntu-ocs
 
 # build image glpi
-docker build -t johann8/${_TAG}:${_VERSION} .
+docker build -t johann8/${_TAG}:${_VERSION} . 2>&1 | tee ./build.log
 _BUILD=$?
 if ! [ ${_BUILD} = 0 ]; then
    echo "ERROR: Docker Image build was not successful"
